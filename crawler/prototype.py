@@ -3,7 +3,7 @@ import aiohttp
 import asyncio
 import asyncpg
 from pathlib import Path
-from bs4 import BeautifulSoup
+from bs4 import BeautifulSoup # make my own html parser and link finder .
 from collections import deque 
 from dotenv import load_dotenv
 
@@ -65,21 +65,12 @@ async def crawl(seed_url: str, max_depth: int = 3) -> set[str]:
 
     # Note: It was really helful to use tuple. 
     frontier: deque[tuple[str, int]] = deque([(seed_url, 0)]) 
-    visited: set[str] = {seed_url} 
-    # v_links : list[str] = []
-
-    # # Dump the Links to file
-    # flat_links = [href for ur in v_links for href in ur]
-    # output_file = Path('/home/aman/maze/crawler/links.txt')
+    visited: set[str] = {seed_url}
     
-    # with open(output_file, 'w', encoding='utf-8') as file:
-    #     for li in flat_links:
-    #         file.write(li + " ".join())
-    
-    # Note: Never inside the loop.
+    # Note: Never use this inside the loop.Made a huge mistake here.
     semaphore = asyncio.Semaphore(20)
 
-    # A long-lived session, i was creating one-session-per-call and have to torn it down. it was messy
+    # A long-lived session, i was creating one-session-per-call and have to torn it down. it was messy.
     async with aiohttp.ClientSession(headers=headers) as session:
         while frontier:
             current_depth = frontier[0][1] #it's nested, slipped through my mind
@@ -104,23 +95,13 @@ async def crawl(seed_url: str, max_depth: int = 3) -> set[str]:
 
                 for link in result:
                     if link not in visited:
-                        v_links.append(link)
                         visited.add(link)
                         frontier.append((link, current_depth + 1))
 
             print(f"Crawl complete. {len(visited)} unique URLs discovered.")
-    # print(v_links)
-    return v_links
 
+    return visited
 
-# async def fetch_to_json(file_path: str) -> None:
-#     seed = 'https://techrcunch.com'
-#     crawler = await crawl(seed)
-#     path = Path('/home/aman/maze/crawler/links.json')
-#     with open(path, 'w') as file:
-#         for line in crawler:
-#             file.write(line)
-#     return crawler
 
  
 async def main():
@@ -129,9 +110,11 @@ async def main():
     
     http = 'https://techcrunch.com'
     crawled_data = await crawl(http)
-    print(type(crawled_data))
+
+    # Note: 
     output_file = Path("/home/aman/maze/crawler/links.txt")
 
+    # Note: Dump data to links.txt file.
     with open(output_file, "w", encoding="utf-8") as file:
         for link in crawled_data:
             file.write(link + "\n")
