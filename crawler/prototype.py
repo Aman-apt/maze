@@ -77,7 +77,7 @@ async def crawl(seed_url: str, max_depth: int = 3) -> set[str]:
             current_url: list[str] = []
             while frontier and frontier[0][1] == current_depth:
                 url, _ = frontier.popleft()
-                visited.append(url)
+                visited.add(url)
             
             print(f'Current depth: {current_depth}: crawling {len(current_url)} .')
 
@@ -94,8 +94,8 @@ async def crawl(seed_url: str, max_depth: int = 3) -> set[str]:
                         visited.add(link)
                         frontier.append(link, current_depth + 1)
 
-    pprint(f"Crawl complete. {len(visited)} unique URLs discovered.")
-    return visited_sets
+    print(f"Crawl complete. {len(visited)} unique URLs discovered.")
+    return visited
 
 
 if __name__ == '__main__':
