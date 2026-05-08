@@ -1,16 +1,18 @@
-
+import os
 import aiohttp
 import asyncio
 import asyncpg
 from bs4 import BeautifulSoup
 from collections import deque 
+from dotenv import load_dotenv
 
 pool: asyncpg.Pool = None
+load_dotenv()
 
 async def create_db_pool():
     global pool
     pool = await asyncpg.create_pool(
-        dsn="postgresql://amanCrawler:amanonlinux@localhost:5432/crawlerDb",
+        dsn=os.getenv('DATABASE_URL'),
         min_size=2,
         max_size=10 
     )
