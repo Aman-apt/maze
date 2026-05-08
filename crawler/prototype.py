@@ -20,6 +20,7 @@ async def create_db_pool():
         max_size=10 
     )
 
+
 async def fetch_pages(session: aiohttp.ClientSession, seed_url: str, semaphore: asyncio.Semaphore, max_retries=3) -> set[str]:
     """
     Fetch pages, parse HTML, and return a set of discovered links.
@@ -65,6 +66,15 @@ async def crawl(seed_url: str, max_depth: int = 3) -> set[str]:
     # Note: It was really helful to use tuple. 
     frontier: deque[tuple[str, int]] = deque([(seed_url, 0)]) 
     visited: set[str] = {seed_url} 
+    # v_links : list[str] = []
+
+    # # Dump the Links to file
+    # flat_links = [href for ur in v_links for href in ur]
+    # output_file = Path('/home/aman/maze/crawler/links.txt')
+    
+    # with open(output_file, 'w', encoding='utf-8') as file:
+    #     for li in flat_links:
+    #         file.write(li + " ".join())
     
     # Note: Never inside the loop.
     semaphore = asyncio.Semaphore(20)
@@ -94,29 +104,37 @@ async def crawl(seed_url: str, max_depth: int = 3) -> set[str]:
 
                 for link in result:
                     if link not in visited:
+                        v_links.append(link)
                         visited.add(link)
                         frontier.append((link, current_depth + 1))
 
-    print(f"Crawl complete. {len(visited)} unique URLs discovered.")
-    return visited
+            print(f"Crawl complete. {len(visited)} unique URLs discovered.")
+    # print(v_links)
+    return v_links
 
-async def fetch_to_json(file_path: str) -> None:
-    seed = 'https://techrcunch.com'
-    crawler = await crawl(seed)
-    path = Path('/home/aman/maze/crawler/links.json')
-    with open(path, 'w') as file:
-        for line in crawler:
-            file.write(line)
-    return 
-    
+
+# async def fetch_to_json(file_path: str) -> None:
+#     seed = 'https://techrcunch.com'
+#     crawler = await crawl(seed)
+#     path = Path('/home/aman/maze/crawler/links.json')
+#     with open(path, 'w') as file:
+#         for line in crawler:
+#             file.write(line)
+#     return crawler
+
+ 
 async def main():
     # await create_db()
     # we'll use databse for the next version this was a prototype.
     
     http = 'https://techcrunch.com'
-    spiders = await crawl(http)
-    json_dump = await fetch_to_json(spiders)
-    print(json_dump)
+    crawled_data = await crawl(http)
+    print(type(crawled_data))
+    output_file = Path("/home/aman/maze/crawler/links.txt")
+
+    with open(output_file, "w", encoding="utf-8") as file:
+        for link in crawled_data:
+            file.write(link + "\n")
     
 
 if __name__ == '__main__':
