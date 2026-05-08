@@ -27,6 +27,8 @@ The crawler starts from a seed URL, fetches the page, extracts links, and contin
 6. Track visited URLs and crawl depth
 
 ## Example
+![Crawl Output](screenshot/output.png)
+![Crawl Output](screenshot/cli_output.png)
 
 
 Seed URL -> Parse Links -> Queue Links -> BFS Crawl
