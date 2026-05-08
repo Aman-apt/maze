@@ -5,8 +5,8 @@ The crawler starts from a seed URL, fetches the page, extracts links, and contin
 
 ## This project was mainly made to understand:
 - asynchronous networking(still more to learn)
-- graph traversal
-- crawling strategies
+- graph traversal(still to implement)
+- crawling strategies(same here)
 - queue management
 - link extraction pipelines
 
