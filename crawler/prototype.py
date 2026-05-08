@@ -2,13 +2,16 @@ import os
 import aiohttp
 import asyncio
 import asyncpg
+from pathlib import Path
 from bs4 import BeautifulSoup
 from collections import deque 
 from dotenv import load_dotenv
 
+
 pool: asyncpg.Pool = None
 load_dotenv()
 
+# Note: Work on this later. It's for psql.
 async def create_db_pool():
     global pool
     pool = await asyncpg.create_pool(
@@ -59,7 +62,7 @@ async def crawl(seed_url: str, max_depth: int = 3) -> set[str]:
         )
     }
 
-    # 
+    # Note: It was really helful to use tuple. 
     frontier: deque[tuple[str, int]] = deque([(seed_url, 0)]) 
     visited: set[str] = {seed_url} 
     
@@ -77,7 +80,7 @@ async def crawl(seed_url: str, max_depth: int = 3) -> set[str]:
             current_url: list[str] = []
             while frontier and frontier[0][1] == current_depth:
                 url, _ = frontier.popleft()
-                visited.add(url)
+                current_url.append(url)
             
             print(f'Current depth: {current_depth}: crawling {len(current_url)} .')
 
@@ -92,14 +95,29 @@ async def crawl(seed_url: str, max_depth: int = 3) -> set[str]:
                 for link in result:
                     if link not in visited:
                         visited.add(link)
-                        frontier.append(link, current_depth + 1)
+                        frontier.append((link, current_depth + 1))
 
     print(f"Crawl complete. {len(visited)} unique URLs discovered.")
     return visited
 
-
-if __name__ == '__main__':
+async def fetch_to_json(file_path: str) -> None:
+    seed = 'https://techrcunch.com'
+    crawler = await crawl(seed)
+    path = Path('/home/aman/maze/crawler/links.json')
+    with open(path, 'w') as file:
+        for line in crawler:
+            file.write(line)
+    return 
+    
+async def main():
     # await create_db()
     # we'll use databse for the next version this was a prototype.
+    
     http = 'https://techcrunch.com'
-    asyncio.run(crawl(http))
+    spiders = await crawl(http)
+    json_dump = await fetch_to_json(spiders)
+    print(json_dump)
+    
+
+if __name__ == '__main__':
+    asyncio.run(main())
