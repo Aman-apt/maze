@@ -28,6 +28,7 @@ async def fetch_pages(session: aiohttp.ClientSession, seed_url: str, semaphore: 
     discovered_links = set()
     timeout = aiohttp.ClientTimeout(total=30, connect=10, sock_read=20)
 
+    catched_errors = []
     for attempt in range(max_retries):
         try:
             async with semaphore:
@@ -35,7 +36,7 @@ async def fetch_pages(session: aiohttp.ClientSession, seed_url: str, semaphore: 
                     if 200 <= response.status <= 299:
                         html = await response.text()
                         if not html:
-                            raise ValueError("Empty response body")
+                            raise aiohttp.ClientResponseError("Empty Response body from the Server .")
 
                         soup = BeautifulSoup(html, "html.parser")
                         for tag in soup.find_all("a"):
@@ -43,8 +44,10 @@ async def fetch_pages(session: aiohttp.ClientSession, seed_url: str, semaphore: 
                             if href and href.startswith("https"):
                                 discovered_links.add(href)
                         break
-                    else:
-                        break 
+                    elif 400 <= response.status <= 499:
+                        catched_errors.append(response.status)
+                    elif 400 <= response.status <= 499:
+                        catched_errors.append(response.status)
     
         except (aiohttp.ClientError, asyncio.TimeoutError) as e:
             wait = (2 ** attempt) + (attempt * 0.1) 
@@ -62,18 +65,16 @@ async def crawl(seed_url: str, max_depth: int = 3) -> set[str]:
             "(KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36"
         )
     }
-
-    # Note: It was really helful to use tuple. 
+ 
     frontier: deque[tuple[str, int]] = deque([(seed_url, 0)]) 
     visited: set[str] = {seed_url}
     
     # Note: Never use this inside the loop.Made a huge mistake here.
     semaphore = asyncio.Semaphore(20)
 
-    # A long-lived session, i was creating one-session-per-call and have to torn it down. it was messy.
     async with aiohttp.ClientSession(headers=headers) as session:
         while frontier:
-            current_depth = frontier[0][1] #it's nested, slipped through my mind
+            current_depth = frontier[0][1]
 
             if current_depth >= max_depth:
                 break
@@ -102,8 +103,6 @@ async def crawl(seed_url: str, max_depth: int = 3) -> set[str]:
 
     return visited
 
-
- 
 async def main():
     # await create_db()
     # we'll use databse for the next version this was a prototype.
@@ -111,7 +110,6 @@ async def main():
     http = 'https://techcrunch.com'
     crawled_data = await crawl(http)
 
-    # Note: 
     output_file = Path("/home/aman/maze/crawler/links.txt")
 
     # Note: Dump data to links.txt file.
