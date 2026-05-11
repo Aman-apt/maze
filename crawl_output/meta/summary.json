@@ -2,8 +2,8 @@
   "start_url": "https://techcrunch.com",
   "max_depth": 3,
   "max_pages": 200,
-  "pages_crawled": 2449,
-  "discovered_urls": 3060,
+  "pages_crawled": 2448,
+  "discovered_urls": 3305,
   "errors": 8,
-  "finished_at": "2026-05-11T03:56:24.528157+00:00"
+  "finished_at": "2026-05-11T05:09:43.144145+00:00"
 }

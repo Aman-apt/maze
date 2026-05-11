@@ -139,19 +139,10 @@ class BFSCrawler:
     
     # Normalize the outgoing Urls because the Urls normally contains fragment(#data)
     # But usually they are for user-interactions it's has no use for crawlers
-    def _normalize_outgoing_links(self, links: set[str], base_url: str) -> list[str]:
-        out: list[str] = []
-        for link in links:
-            normalized = normalize_url(link, base=base_url)
-            if not normalized:
-                continue
-            if normalized.startswith('mailto:') or normalized.startswith('javascript:') or normalized.startswith('tel:'):
-                continue
-            if not self._same_scope(normalized):
-                continue
-            out.append(normalized)
-        return out
-
+    def _normalize_outgoing_links(self, links: set[str], base_url: str = None) -> str:
+        normalized = normalize_url(links, base=base_url)
+        return normalized      
+    
 
     async def crawl(self) -> dict:
         connector = aiohttp.TCPConnector(limit=self.config.concurrency, ssl=False)
@@ -175,7 +166,8 @@ class BFSCrawler:
                 current_url: list[str] = []
                 while self.frontier and self.frontier[0][1] == current_depth:
                     url, _ = self.frontier.popleft()
-                    current_url.append(url)
+                    normal = self._normalize_outgoing_links(url)
+                    current_url.append(normal)
 
                 # To limit the Number of concurrent callbacks in the event loop
                 sem = asyncio.Semaphore(self.config.concurrency)
@@ -183,20 +175,20 @@ class BFSCrawler:
                 tasks = [fetch_pages(session, url, sem) for url in current_url]
                 results = await asyncio.gather(*tasks, return_exceptions=True)
 
-                for item in results:
-                    if isinstance(item, Exception):
+                for urls_set in results:
+                    if isinstance(urls_set, Exception):
                         self._append_jsonl(self.errors_jsonl, {
                             "timestamp": utc_now(),
                             "depth": current_depth,
                             "ok": False,
-                            "error": repr(item),
+                            "error": repr(urls_set),
                         })
                         summary["errors"] += 1
                         continue
                     
                     self.pages_crawled += 1
 
-                    for child in item:
+                    for child in urls_set:
                         if self.pages_crawled >= self.config.max_pages:
                             break
                         if child not in self.visited:
