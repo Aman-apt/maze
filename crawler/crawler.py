@@ -12,11 +12,8 @@ from utils import (
 )
 from typing import Optional
 from pathlib import Path
-from urllib.parse import urlparse, urljoin
 from crawler_1 import fetch_pages
 from collections import deque
-
-
  
 @dataclass
 class CrawlerConfig:

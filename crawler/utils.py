@@ -1,7 +1,6 @@
 import aiohttp
 import asyncio
 from urllib.parse import urlparse, urljoin, urlunparse
-from html.parser import HTMLParser
 from typing import Optional
 
 def normalize_url(url: str, base: Optional[str] = None) -> Optional[str]:
