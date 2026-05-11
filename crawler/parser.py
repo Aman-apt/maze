@@ -36,6 +36,7 @@ def content_type_from_headers(headers: Dict[str, str]) -> str:
     ct = headers.get("Content-Type", "")
     return ct.split(";", 1)[0].strip().lower()
 
+
 def guess_extension(content_type: str) -> str:
     if "text/html" in content_type:
         return ".html"
@@ -43,11 +44,12 @@ def guess_extension(content_type: str) -> str:
         return ".txt"
     if "application/json" in content_type:
         return ".json"
-    if content_type.startswith("image/"):
-        return "." + content_type.split("/", 1)[1][:8]
-    if content_type.startswith("application/pdf"):
-        return ".pdf"
     return ".bin"
+
+from datetime import datetime, timezone
+def utc_now():
+    return datetime.now(timezone.utc).isoformat()
+
 
 # testing the functionalities
 if __name__ == "__main__":
